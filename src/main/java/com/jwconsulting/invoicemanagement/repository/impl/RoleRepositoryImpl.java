@@ -14,8 +14,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.jwconsulting.invoicemanagement.query.RoleQuery.INSERT_ROLE_TO_USER_QUERY;
-import static com.jwconsulting.invoicemanagement.query.RoleQuery.SELECT_ROLE_BY_NAME_QUERY;
+import static com.jwconsulting.invoicemanagement.enumeration.RoleType.ROLE_USER;
+import static com.jwconsulting.invoicemanagement.query.RoleQuery.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -65,7 +65,15 @@ public class RoleRepositoryImpl implements RoleRepository<Role> {
 
     @Override
     public Role getRoleByUserId(Long userId) {
-        return null;
+        log.info("Adding role for user id: {}", userId);
+        try {
+            return jdbc.queryForObject(SELECT_ROLE_BY_ID_QUERY, Map.of("id", userId), new RoleRowMapper());  //mapping the roles to an actual java object
+        } catch (EmptyResultDataAccessException exception) {
+            throw new ApiException("No role found by name: " + ROLE_USER.name());
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
     }
 
     @Override
