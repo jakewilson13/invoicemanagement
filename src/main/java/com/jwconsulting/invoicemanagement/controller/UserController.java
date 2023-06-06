@@ -4,6 +4,9 @@ import com.jwconsulting.invoicemanagement.dto.UserDTO;
 import com.jwconsulting.invoicemanagement.form.LoginForm;
 import com.jwconsulting.invoicemanagement.model.HttpResponse;
 import com.jwconsulting.invoicemanagement.model.User;
+import com.jwconsulting.invoicemanagement.model.UserPrincipal;
+import com.jwconsulting.invoicemanagement.provider.TokenProvider;
+import com.jwconsulting.invoicemanagement.service.RoleService;
 import com.jwconsulting.invoicemanagement.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,13 +32,15 @@ import static java.time.LocalDateTime.now;
 public class UserController {
 
     private final UserService userService;
+    private final RoleService roleService;
     private final AuthenticationManager authManager;
+    private final TokenProvider provider;
 
     @PostMapping(value = "/login")
     public ResponseEntity<HttpResponse> login(@RequestBody @Valid LoginForm loginForm) {
         authManager.authenticate(new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword()));
         UserDTO user = userService.getUserByEmail(loginForm.getEmail());
-        return user.isUsingMfa() ? sendverificationCode(user) : sendresponse(user);
+        return user.isUsingMfa() ? sendVerificationCode(user) : sendResponse(user);
     }
 
     @PostMapping(value = "/register")
@@ -55,18 +60,24 @@ public class UserController {
     private URI getUri() {
         return URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/get/<userId>").toUriString());
     }
-    private ResponseEntity<HttpResponse> sendresponse(UserDTO user) {
+
+    private ResponseEntity<HttpResponse> sendResponse(UserDTO user) {
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
-                        .data(Map.of("user", user))
+                        .data(Map.of("user", user, "access_token", provider.createAccessToken(getUserPrincipal(user))
+                                , "refresh_token", provider.createRefreshToken(getUserPrincipal(user))))
                         .message("Login Successful.")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
                         .build());
     }
 
-    private ResponseEntity<HttpResponse> sendverificationCode(UserDTO user) {
+    private UserPrincipal getUserPrincipal(UserDTO user) {
+        return new UserPrincipal(userService.getUser(user.getEmail()), roleService.getRoleByUserId(user.getId()).getPermission());
+    }
+
+    private ResponseEntity<HttpResponse> sendVerificationCode(UserDTO user) {
         userService.sendVerificationCode(user);
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
@@ -77,4 +88,5 @@ public class UserController {
                         .statusCode(HttpStatus.OK.value())
                         .build());
     }
+
 }

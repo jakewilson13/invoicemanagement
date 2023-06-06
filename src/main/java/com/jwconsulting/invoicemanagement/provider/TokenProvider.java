@@ -1,0 +1,109 @@
+package com.jwconsulting.invoicemanagement.provider;
+
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.InvalidClaimException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.jwconsulting.invoicemanagement.model.UserPrincipal;
+import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.stream;
+
+@Component
+public class TokenProvider {
+    private static final String JW_CONSULTING_LLC = "JW Consulting LLC";
+    private static final String CUSTOMER_MANAGEMENT_SERVICE = "Customer Management Service";
+    private static final String AUTHORITIES = "authorities";
+    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 1_800_000; //30 mins
+    private static final long REFRESH_TOKEN_EXPIRATION_TIME = 432_000_000;  //5 days
+    private static final String TOKEN_CANNOT_BE_VERIFIED = "This token cannot be verified.";
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    public String createAccessToken(UserPrincipal user) {
+        String[] claims = getClaimsFromUser(user);
+        return JWT.create().withIssuer(JW_CONSULTING_LLC).withAudience(CUSTOMER_MANAGEMENT_SERVICE)
+                .withIssuedAt(new Date()).withSubject(user.getUsername()).withArrayClaim(AUTHORITIES, claims)
+                .withExpiresAt(new Date(currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME))
+                .sign(Algorithm.HMAC512(secret.getBytes()));
+    }
+
+    public String createRefreshToken(UserPrincipal user) {
+        String[] claims = getClaimsFromUser(user);
+        return JWT.create().withIssuer(JW_CONSULTING_LLC).withAudience(CUSTOMER_MANAGEMENT_SERVICE)
+                .withIssuedAt(new Date()).withSubject(user.getUsername())
+                .withExpiresAt(new Date(currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
+                .sign(Algorithm.HMAC512(secret.getBytes()));
+    }
+
+    public String getSubject(String token, HttpServletRequest request) {
+        try {
+            return getJwtVerifier().verify(token).getSubject();
+        } catch (TokenExpiredException e) {
+            request.setAttribute("expiredMessage", e.getMessage());
+        } catch (InvalidClaimException e) {
+            request.setAttribute("invalidClaim", e.getMessage());
+        } catch (Exception e) {
+            throw e;
+        }
+        return null;
+    }
+
+    public List<GrantedAuthority> getAuthorities(String token) {
+        String[] claims = getClaimsFromToken(token);
+        return stream(claims).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+    }
+
+    public Authentication getAuthentication(String email, List<GrantedAuthority> authorities, HttpServletRequest request) {
+        UsernamePasswordAuthenticationToken usernamePasswordAuthToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
+        usernamePasswordAuthToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        return usernamePasswordAuthToken;
+    }
+
+    public boolean isTokenValid(String email, String token) {
+        JWTVerifier verifier = getJwtVerifier();
+        return StringUtils.isNotEmpty(email) && !isTokenExpired(verifier, token);
+    }
+
+    private boolean isTokenExpired(JWTVerifier verifier, String token) {
+        Date expiration = verifier.verify(token).getExpiresAt();
+        return expiration.before(new Date());
+    }
+
+    private String[] getClaimsFromUser(UserPrincipal user) {
+        return user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toArray(String[]::new);   //gives us a String[] of authorities
+    }
+
+    private String[] getClaimsFromToken(String token) {
+        JWTVerifier verifier = getJwtVerifier();
+        return verifier.verify(token).getClaim(AUTHORITIES).asArray(String.class);
+    }
+
+    private JWTVerifier getJwtVerifier() {
+        JWTVerifier verifier;
+        try {
+            Algorithm algorithm = Algorithm.HMAC512(secret);
+            verifier = JWT.require(algorithm).withIssuer(JW_CONSULTING_LLC).build();
+        } catch (JWTVerificationException e) {
+            throw new JWTVerificationException(TOKEN_CANNOT_BE_VERIFIED);
+        }
+        return verifier;
+    }
+
+}
