@@ -109,8 +109,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
     @Override
     public User getUserByEmail(String email) {
         try {
-            User user = jdbc.queryForObject(SELECT_USER_BY_EMAIL_QUERY, Map.of("email", email), new UserRowMapper());
-            return user;
+            return jdbc.queryForObject(SELECT_USER_BY_EMAIL_QUERY, Map.of("email", email), new UserRowMapper());
         } catch (EmptyResultDataAccessException e) {
             throw new ApiException("No User found by email: " + email);
         } catch (Exception e) {
@@ -126,10 +125,40 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         try {
             jdbc.update(DELETE_VERIFICATION_CODE_BY_USER_ID, Map.of("id", user.getId()));
             jdbc.update(INSERT_VERIFICATION_CODE_QUERY, Map.of("userId", user.getId(), "code", verificationCode, "expirationDate", expirationDate));
-            sendSMS(user.getPhone(), "From: InvoiceManagement \nVerification Code\n" + verificationCode);
+//          sendSMS(user.getPhone(), "From: InvoiceManagement \nVerification Code\n" + verificationCode);
+            log.info("Verification Code: {}", verificationCode);
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    @Override
+    public User verifyCode(String email, String code) {
+        if(isVerificationCodeExpired(code)) throw new ApiException("This code has expired. Please login again.");
+        try {
+            User userByCode = jdbc.queryForObject(SELECT_USER_BY_USER_CODE_QUERY, Map.of("code", code), new UserRowMapper());
+            User userByEmail = jdbc.queryForObject(SELECT_USER_BY_EMAIL_QUERY, Map.of("email", email), new UserRowMapper());
+            if(userByCode.getEmail().equalsIgnoreCase(userByEmail.getEmail())) {
+                jdbc.update(DELETE_USER_CODE_QUERY, Map.of("code", code, "email", email));  //upon verification, delete the code so it can only be used once
+                return userByCode;
+            } else {
+                throw new ApiException("Code is invalid. Please try again.");
+            }
+        } catch(EmptyResultDataAccessException e) {
+            throw new ApiException("Unable to find record.");
+        } catch(Exception e) {
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    private Boolean isVerificationCodeExpired(String code) {
+        try {
+            return jdbc.queryForObject(SELECT_CODE_EXPIRATION_DATE_QUERY, Map.of("code", code), Boolean.class);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ApiException("This code is not valid. Please login again.");
+        } catch(Exception e) {
+            throw new ApiException("An error occured. Please try again.");
         }
     }
 

@@ -1,11 +1,10 @@
 package com.jwconsulting.invoicemanagement.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 /**
@@ -25,4 +24,6 @@ public class UserDTO {
     private boolean isNotLocked;
     private boolean isUsingMfa;
     private LocalDateTime createdAt;
+    private String roleName;
+    private String permissions;
 }

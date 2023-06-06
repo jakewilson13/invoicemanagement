@@ -7,4 +7,7 @@ public class UserQuery {
     public static final String SELECT_USER_BY_EMAIL_QUERY = "SELECT * FROM users WHERE email = :email";
     public static final String DELETE_VERIFICATION_CODE_BY_USER_ID = "DELETE FROM twofactorverifications WHERE user_id = :id";
     public static final String INSERT_VERIFICATION_CODE_QUERY = "INSERT INTO twofactorverifications (user_id, code, expiration_date) VALUES (:userId, :code, :expirationDate)";
+    public static final String SELECT_USER_BY_USER_CODE_QUERY = "SELECT * FROM users WHERE id = (SELECT user_id FROM twofactorverifications WHERE code = :code)";
+    public static final String DELETE_USER_CODE_QUERY = "DELETE FROM twofactorverifications WHERE code = :code AND user_id IN (SELECT id FROM users WHERE email = :email)";
+    public static final String SELECT_CODE_EXPIRATION_DATE_QUERY = "SELECT expiration_date < NOW () AS is_expired FROM twofactorverifications WHERE code = :code";
 }
