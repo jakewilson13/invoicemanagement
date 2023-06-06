@@ -6,4 +6,5 @@ import com.jwconsulting.invoicemanagement.model.User;
 public interface UserService {
     UserDTO createUser(User user);
     UserDTO getUserByEmail(String email);
+    void sendVerificationCode(UserDTO user);
 }

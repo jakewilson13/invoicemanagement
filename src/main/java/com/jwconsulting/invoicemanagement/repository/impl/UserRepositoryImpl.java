@@ -1,5 +1,6 @@
 package com.jwconsulting.invoicemanagement.repository.impl;
 
+import com.jwconsulting.invoicemanagement.dto.UserDTO;
 import com.jwconsulting.invoicemanagement.exception.ApiException;
 import com.jwconsulting.invoicemanagement.model.Role;
 import com.jwconsulting.invoicemanagement.model.User;
@@ -10,6 +11,8 @@ import com.jwconsulting.invoicemanagement.rowmapper.UserRowMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -24,18 +27,23 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
 import static com.jwconsulting.invoicemanagement.enumeration.RoleType.ROLE_USER;
 import static com.jwconsulting.invoicemanagement.enumeration.VerificationType.ACCOUNT;
 import static com.jwconsulting.invoicemanagement.query.UserQuery.*;
+import static com.jwconsulting.invoicemanagement.utils.SMSUtils.sendSMS;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.time.DateUtils.addDays;
 
 @Repository
 @RequiredArgsConstructor
 @Slf4j
 public class UserRepositoryImpl implements UserRepository<User>, UserDetailsService {
+
+    private static final String DATE_FORMAT = "yyyy-MM-dd hh:mm:ss";
 
     private final NamedParameterJdbcTemplate jdbc;
     private final RoleRepository<Role> roleRepository;
@@ -105,6 +113,20 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             return user;
         } catch (EmptyResultDataAccessException e) {
             throw new ApiException("No User found by email: " + email);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    @Override
+    public void sendVerificationCode(UserDTO user) {
+        String expirationDate = DateFormatUtils.format(addDays(new Date(), 1), DATE_FORMAT);    //1 day
+        String verificationCode = RandomStringUtils.randomAlphanumeric(8).toUpperCase();    //generates random 8 digit code consisting of numbers and letters
+        try {
+            jdbc.update(DELETE_VERIFICATION_CODE_BY_USER_ID, Map.of("id", user.getId()));
+            jdbc.update(INSERT_VERIFICATION_CODE_QUERY, Map.of("userId", user.getId(), "code", verificationCode, "expirationDate", expirationDate));
+            sendSMS(user.getPhone(), "From: InvoiceManagement \nVerification Code\n" + verificationCode);
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ApiException("An error occurred. Please try again.");

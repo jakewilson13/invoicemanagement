@@ -1,5 +1,6 @@
 package com.jwconsulting.invoicemanagement.repository;
 
+import com.jwconsulting.invoicemanagement.dto.UserDTO;
 import com.jwconsulting.invoicemanagement.model.User;
 
 import java.util.Collection;
@@ -14,4 +15,5 @@ public interface UserRepository <T extends User> {
 
     /**More Complex Operations**/
     User getUserByEmail(String email);
+    void sendVerificationCode(UserDTO user);
 }
