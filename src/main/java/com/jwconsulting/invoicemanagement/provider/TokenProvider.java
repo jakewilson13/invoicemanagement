@@ -7,7 +7,9 @@ import com.auth0.jwt.exceptions.InvalidClaimException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.jwconsulting.invoicemanagement.model.UserPrincipal;
+import com.jwconsulting.invoicemanagement.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,7 +27,9 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
 
 @Component
+@RequiredArgsConstructor
 public class TokenProvider {
+    private UserService userService;
     private static final String JW_CONSULTING_LLC = "JW Consulting LLC";
     private static final String CUSTOMER_MANAGEMENT_SERVICE = "Customer Management Service";
     private static final String AUTHORITIES = "authorities";
@@ -57,12 +61,13 @@ public class TokenProvider {
             return getJwtVerifier().verify(token).getSubject();
         } catch (TokenExpiredException e) {
             request.setAttribute("expiredMessage", e.getMessage());
+            return e.getMessage();
         } catch (InvalidClaimException e) {
             request.setAttribute("invalidClaim", e.getMessage());
+            return e.getMessage();
         } catch (Exception e) {
             throw e;
         }
-        return null;
     }
 
     public List<GrantedAuthority> getAuthorities(String token) {
@@ -71,7 +76,7 @@ public class TokenProvider {
     }
 
     public Authentication getAuthentication(String email, List<GrantedAuthority> authorities, HttpServletRequest request) {
-        UsernamePasswordAuthenticationToken usernamePasswordAuthToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
+        UsernamePasswordAuthenticationToken usernamePasswordAuthToken = new UsernamePasswordAuthenticationToken(userService.getUserByEmail(email), null, authorities);
         usernamePasswordAuthToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         return usernamePasswordAuthToken;
     }

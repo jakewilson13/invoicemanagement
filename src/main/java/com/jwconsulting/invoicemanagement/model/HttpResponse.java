@@ -1,6 +1,7 @@
 package com.jwconsulting.invoicemanagement.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 import org.springframework.http.HttpStatus;
@@ -17,5 +18,6 @@ public class HttpResponse {
     protected String reason;
     protected String message;
     protected String developerMessage;
+    protected String path;
     protected Map<?, ?> data;
 }

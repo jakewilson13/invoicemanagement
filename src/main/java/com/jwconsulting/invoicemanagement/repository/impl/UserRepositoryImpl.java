@@ -1,6 +1,7 @@
 package com.jwconsulting.invoicemanagement.repository.impl;
 
 import com.jwconsulting.invoicemanagement.dto.UserDTO;
+import com.jwconsulting.invoicemanagement.enumeration.VerificationType;
 import com.jwconsulting.invoicemanagement.exception.ApiException;
 import com.jwconsulting.invoicemanagement.model.Role;
 import com.jwconsulting.invoicemanagement.model.User;
@@ -33,9 +34,11 @@ import java.util.UUID;
 
 import static com.jwconsulting.invoicemanagement.enumeration.RoleType.ROLE_USER;
 import static com.jwconsulting.invoicemanagement.enumeration.VerificationType.ACCOUNT;
+import static com.jwconsulting.invoicemanagement.enumeration.VerificationType.PASSWORD;
 import static com.jwconsulting.invoicemanagement.query.UserQuery.*;
 import static com.jwconsulting.invoicemanagement.utils.SMSUtils.sendSMS;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.time.DateFormatUtils.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
 @Repository
@@ -99,7 +102,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         User user = getUserByEmail(email);
         if(user != null) {
             log.info("User found in the database with email: {}", email);
-            return new UserPrincipal(user, roleRepository.getRoleByUserId(user.getId()).getPermission());
+            return new UserPrincipal(user, roleRepository.getRoleByUserId(user.getId()));
         } else {
             log.error("User not found inside of database with email: {}", email);
             throw new UsernameNotFoundException("User not found inside of database.");
@@ -120,7 +123,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
 
     @Override
     public void sendVerificationCode(UserDTO user) {
-        String expirationDate = DateFormatUtils.format(addDays(new Date(), 1), DATE_FORMAT);    //1 day
+        String expirationDate = format(addDays(new Date(), 1), DATE_FORMAT);    //1 day
         String verificationCode = RandomStringUtils.randomAlphanumeric(8).toUpperCase();    //generates random 8 digit code consisting of numbers and letters
         try {
             jdbc.update(DELETE_VERIFICATION_CODE_BY_USER_ID, Map.of("id", user.getId()));
@@ -147,6 +150,49 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             }
         } catch(EmptyResultDataAccessException e) {
             throw new ApiException("Unable to find record.");
+        } catch(Exception e) {
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    @Override
+    public void resetPassword(String email) {
+        if(getEmailCount(email.trim().toLowerCase()) <= 0) throw new ApiException("There is no account for this email address.");
+        try {
+                String expirationDate = format(addDays(new Date(), 1), DATE_FORMAT);
+                User user = getUserByEmail(email);
+                String verificationUrl = getVerificationUrl(UUID.randomUUID().toString(), PASSWORD.getType());
+                jdbc.update(DELETE_PASSWORD_VERIFICATION_BY_ID_QUERY, Map.of("userId", user.getId()));
+                jdbc.update(INSERT_PASSWORD_VERIFICATION_QUERY, Map.of("userId", user.getId(), "url", verificationUrl, "expirationDate", expirationDate));
+                //TODO: send email with url to user
+                log.info("Verification Url: " + verificationUrl);
+
+        } catch(Exception e) {
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    @Override
+    public User verifyPasswordKey(String key) {
+        if(isLinkExpired(key, PASSWORD)) throw new ApiException("This link has expired. Please reset your password again.");
+        try {
+            User user =  jdbc.queryForObject(SELECT_USER_BY_PASSWORD_URL_QUERY, Map.of("url", getVerificationUrl(key, PASSWORD.getType())), new UserRowMapper());
+//            jdbc.update(DELETE_USER_FROM_PASSWORD_VERIFICATION_QUERY), Map.of("id", user.getId());  //click the link once and verify your password. click it again then the link will not be valid.
+            return user;
+        } catch (EmptyResultDataAccessException e) {
+            log.error(e.getMessage());
+            throw new ApiException("This link is not valid. Please reset your password again.");
+        } catch(Exception e) {
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    private Boolean isLinkExpired(String key, VerificationType password) {
+        try {
+            return jdbc.queryForObject(SELECT_EXPIRATION_BY_URL, Map.of("url", getVerificationUrl(key, password.getType())), Boolean.class);
+        } catch (EmptyResultDataAccessException e) {
+            log.error(e.getMessage());
+            throw new ApiException("This link is not valid. Please reset your password again.");
         } catch(Exception e) {
             throw new ApiException("An error occurred. Please try again.");
         }

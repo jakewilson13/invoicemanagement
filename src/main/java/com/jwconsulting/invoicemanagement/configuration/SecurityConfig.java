@@ -1,5 +1,6 @@
 package com.jwconsulting.invoicemanagement.configuration;
 
+import com.jwconsulting.invoicemanagement.filter.CustomAuthorizationFilter;
 import com.jwconsulting.invoicemanagement.handler.CustomAccessDeniedHandler;
 import com.jwconsulting.invoicemanagement.handler.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)    //only admins in our application will have access to certain methods
 @EnableWebSecurity
@@ -26,7 +29,8 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final UserDetailsService userDetailsService;
-    private static final String[] PUBLIC_URLS = { "/user/register/**", "/user/login/**", "/user/verify/code/**" };
+    private final CustomAuthorizationFilter customAuthorizationFilter;
+    private static final String[] PUBLIC_URLS = { "/user/register/**", "/user/login/**", "/user/verify/code/**", "/user/reset/password/**", "/user/verify/password/**" };
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable().cors().disable(); //disable cors so we can put in our own cors config
@@ -36,6 +40,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests().requestMatchers(HttpMethod.DELETE, "/customer/delete/**").hasAnyAuthority("DELETE:CUSTOMER");
         http.exceptionHandling().accessDeniedHandler(customAccessDeniedHandler).authenticationEntryPoint(customAuthenticationEntryPoint);
         http.authorizeHttpRequests().anyRequest().authenticated();
+        http.addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
