@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.Base64;
+
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
 public class InvoicemanagementApplication {
 
@@ -14,7 +16,9 @@ public class InvoicemanagementApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(InvoicemanagementApplication.class, args);
-
+		/**String secret = "";
+		String base64Encoded = Base64.getEncoder().encodeToString(secret.getBytes());
+		System.out.println(base64Encoded);**/
 	}
 
 	@Bean

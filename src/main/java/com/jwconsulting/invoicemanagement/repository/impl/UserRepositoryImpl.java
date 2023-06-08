@@ -11,9 +11,7 @@ import com.jwconsulting.invoicemanagement.repository.UserRepository;
 import com.jwconsulting.invoicemanagement.rowmapper.UserRowMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -36,7 +34,6 @@ import static com.jwconsulting.invoicemanagement.enumeration.RoleType.ROLE_USER;
 import static com.jwconsulting.invoicemanagement.enumeration.VerificationType.ACCOUNT;
 import static com.jwconsulting.invoicemanagement.enumeration.VerificationType.PASSWORD;
 import static com.jwconsulting.invoicemanagement.query.UserQuery.*;
-import static com.jwconsulting.invoicemanagement.utils.SMSUtils.sendSMS;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.time.DateFormatUtils.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
@@ -184,6 +181,31 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             throw new ApiException("This link is not valid. Please reset your password again.");
         } catch(Exception e) {
             throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    @Override
+    public void renewPassword(String key, String password, String confirmPassword) {
+        if(!password.equals(confirmPassword)) throw new ApiException("Passwords do not match. Please try again.");
+        try {
+            jdbc.update(UPDATE_USER_PASSWORD_BY_URL_QUERY, Map.of("password", encoder.encode(password), "url", getVerificationUrl(key, PASSWORD.getType())));
+            jdbc.update(DELETE_VERIFICATION_BY_URL_QUERY, Map.of("url", getVerificationUrl(key, PASSWORD.getType())));
+        } catch (EmptyResultDataAccessException e) {
+            log.error(e.getMessage());
+            throw new ApiException("This link is not valid. Please reset your password again.");
+        }
+    }
+
+    @Override
+    public User verifyAccountKey(String key) {
+        try {
+            User user = jdbc.queryForObject(SELECT_USER_BY_ACCOUNT_URL_QUERY, Map.of("url", getVerificationUrl(key, ACCOUNT.getType())), new UserRowMapper());
+            jdbc.update(UPDATE_USER_ENABLED_QUERY, Map.of("enabled", true, "id", user.getId()));
+            return user;
+        } catch (EmptyResultDataAccessException e) {
+            throw new ApiException("This link is not valid.");
+        } catch(Exception e) {
+            throw new ApiException("An error occured. Please try again.");
         }
     }
 

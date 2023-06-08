@@ -9,6 +9,7 @@ import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.jwconsulting.invoicemanagement.model.UserPrincipal;
 import com.jwconsulting.invoicemanagement.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,16 +20,18 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.stream;
 
 @Component
 @RequiredArgsConstructor
 public class TokenProvider {
+    @NonNull
     private UserService userService;
     private static final String JW_CONSULTING_LLC = "JW Consulting LLC";
     private static final String CUSTOMER_MANAGEMENT_SERVICE = "Customer Management Service";
@@ -72,7 +75,12 @@ public class TokenProvider {
 
     public List<GrantedAuthority> getAuthorities(String token) {
         String[] claims = getClaimsFromToken(token);
-        return stream(claims).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        if (claims != null) {
+            return Arrays.stream(claims).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        } else {
+            // Optionally log an error message or throw an exception
+            return Collections.emptyList(); // return an empty list or handle this case as per your logic
+        }
     }
 
     public Authentication getAuthentication(String email, List<GrantedAuthority> authorities, HttpServletRequest request) {
@@ -110,5 +118,4 @@ public class TokenProvider {
         }
         return verifier;
     }
-
 }

@@ -30,7 +30,7 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final UserDetailsService userDetailsService;
     private final CustomAuthorizationFilter customAuthorizationFilter;
-    private static final String[] PUBLIC_URLS = { "/user/register/**", "/user/login/**", "/user/verify/code/**", "/user/reset/password/**", "/user/verify/password/**" };
+    private static final String[] PUBLIC_URLS = { "/user/register/**", "/user/login/**", "/user/verify/code/**", "/user/reset/password/**", "/user/verify/password/**", "/user/verify/account/**", "/user/refresh/token/**" };
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable().cors().disable(); //disable cors so we can put in our own cors config
