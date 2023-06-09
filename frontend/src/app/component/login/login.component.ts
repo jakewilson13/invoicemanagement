@@ -12,6 +12,7 @@ import {Key} from "../../enum/key.enum";
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
+//Handles all front-end login business logic
 export class LoginComponent {
   loginState$: Observable<LoginState> = of({ dataState: DataState.LOADED});
   private phoneSubject = new BehaviorSubject<string | null>(null);

@@ -28,7 +28,9 @@ import static java.util.Optional.ofNullable;
 @RequiredArgsConstructor
 @Slf4j
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
-
+/**
+ * Filter that intercepts each request through our security config.
+ **/
     private static final String[] PUBLIC_ROUTES = { "/user/register", "/user/login", "/user/verify/code" };
     private final TokenProvider tokenProvider;
     private static final String TOKEN_PREFIX = "Bearer ";
