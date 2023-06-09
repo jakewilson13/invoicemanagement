@@ -7,8 +7,9 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 /**
- * DTOs are used for fields and properties that you want to send to the front-end. Password is not included here.
+ * DTOs are used for fields and properties that you want to send to the front-end. Password is not included here in the response.
  **/
 public class UserDTO {
     private Long id;
