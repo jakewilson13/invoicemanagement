@@ -224,7 +224,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         try {
             return jdbc.queryForObject(SELECT_CODE_EXPIRATION_DATE_QUERY, Map.of("code", code), Boolean.class);
         } catch (EmptyResultDataAccessException e) {
-            throw new ApiException("This code is not valid. Please login again.");
+            throw new ApiException("This code is not valid. Please enter the correct verification code.");
         } catch(Exception e) {
             throw new ApiException("An error occured. Please try again.");
         }
