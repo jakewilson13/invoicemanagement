@@ -8,7 +8,7 @@ import { Profile } from "../interface/profile";
   providedIn: 'root'
 })
 export class UserService {
-  private readonly server: string = '';
+  private readonly server: string = 'http://localhost:8081';
   constructor(private http: HttpClient) {}
 
   login$ = (email: string, password: string) => <Observable<CustomHttpResponse<Profile>>>
@@ -19,12 +19,19 @@ export class UserService {
         catchError(this.handleError)
       );
 
+  verifyCode$ = (email: string, code: string) => <Observable<CustomHttpResponse<Profile>>>
+    this.http.get<CustomHttpResponse<Profile>>
+    (`${this.server}/user/verify/code/${email}/${code}`)
+      .pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      );
+
   /*
    *ErrorEvent is an error that occurs on the front-end.
    */
 
   private handleError(error: HttpErrorResponse): Observable<never> {
-    console.log(error);
     let errorMessage: string;
     if (error.error instanceof ErrorEvent) {
       errorMessage = `A client error occurred - ${error.error.message}`;
