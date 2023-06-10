@@ -2,7 +2,7 @@
 <br>
 <b>Powered by Spring Boot 3.0.2 & Node.js 16.14.0</b>
 
-This is the V.1.0 of the Invoice Management Application. This Application contains a front-end UI with Angualr & a backend with Java, Springboot & MariaDB.
+This is the V.1.0 of the Invoice Management Application. This Application contains a front-end UI with Angular & backend with Java, Springboot & MariaDB.
 
 This application is designed to have a centrailized place for a busniess to host Employees, Customers & Invoice related data to the employee's using this application.
 
