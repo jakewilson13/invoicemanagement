@@ -1,0 +1,74 @@
+<ng-container>
+  <ng-container>
+    <app-navbar></app-navbar>
+    <app-stats></app-stats>
+    <section>
+      <div class="container">
+        <div class="row mt-3">
+          <div class="progress">
+            <div class="progress-bar bg-success" role="progressbar" aria-valuenow="" aria-valuemin="0"
+                 aria-valuemax="100">
+              5%
+            </div>
+          </div>
+          <div class="col">
+            <h4 class="fw-bold text-start">Customers</h4>
+          </div>
+          <div class="col">
+            <h4 class="fw-bold text-end"><i style="cursor: pointer;color: green;font-size: 20px;"
+                                            class="bi bi-file-earmark-excel">Export to Excel</i></h4>
+          </div>
+          <div class="col-xm-12">
+            <table class="table table-hover">
+              <thead>
+              <tr>
+                <th class="text-center" scope="col">ID</th>
+                <th scope="col">Photo</th>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Phone</th>
+                <th scope="col">Status</th>
+                <th scope="col">Type</th>
+                <th scope="col">Action</th>
+              </tr>
+              </thead>
+              <tbody class="table-body">
+              <tr class="cell-1">
+                <th class="text-center">1</th>
+                <td><img src="https://img.freepik.com/free-icon/user_318-159711.jpg" width="42" height="42"
+                         class="rounded-circle" alt="Avatar"></td>
+                <td>John</td>
+                <td>john@email.com</td>
+                <td>1234567890</td>
+                <td>
+                               <span class="badge bg-info">
+                                  ACTIVE
+                               </span>
+                </td>
+                <td>INDIVIDUAL</td>
+                <td>
+                  <button type="button" class="btn btn-info">View</button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div class="container">
+              <div class="d-flex justify-content-center">
+                <div class="pagination">
+                  <ul>
+                    <li class="prev disabled"><a href="#">&lt;</a></li>
+                    <li class="active"><a href="#">1</a></li>
+                    <li><a href="#">2</a></li>
+                    <li><a href="#">3</a></li>
+                    <li class="next"><a href="#">&gt;</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</ng-container>
