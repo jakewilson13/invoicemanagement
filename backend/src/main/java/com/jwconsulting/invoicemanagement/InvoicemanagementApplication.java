@@ -12,7 +12,7 @@ import org.springframework.web.filter.CorsFilter;
 import java.util.List;
 import java.util.Arrays;
 
-@SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
+@SpringBootApplication//(exclude = { SecurityAutoConfiguration.class })
 public class InvoicemanagementApplication {
 
 	private static final int STRENGTH = 12;

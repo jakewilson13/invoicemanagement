@@ -27,6 +27,8 @@ import java.util.Map;
 
 import static com.jwconsulting.invoicemanagement.dto.UserDTOMapper.toUser;
 import static com.jwconsulting.invoicemanagement.utils.ExceptionUtils.processError;
+import static com.jwconsulting.invoicemanagement.utils.UserUtils.getAuthenticatedUser;
+import static com.jwconsulting.invoicemanagement.utils.UserUtils.getLoggedInUser;
 import static java.time.LocalDateTime.now;
 import static org.springframework.security.authentication.UsernamePasswordAuthenticationToken.unauthenticated;
 
@@ -44,7 +46,7 @@ public class UserController {
 
     @GetMapping("/profile")
     public ResponseEntity<HttpResponse> profile(Authentication authentication) {
-        UserDTO user = userService.getUserByEmail(authentication.getName());
+        UserDTO user = userService.getUserByEmail(getAuthenticatedUser(authentication).getEmail());
         System.out.println("Authenticated User: " + authentication);
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
@@ -162,7 +164,7 @@ public class UserController {
     @PostMapping(value = "/login")
     public ResponseEntity<HttpResponse> login(@RequestBody @Valid LoginForm loginForm) {
         Authentication authentication = authenticate(loginForm.getEmail(), loginForm.getPassword());
-        UserDTO user = getAuthenticatedUser(authentication);
+        UserDTO user = getLoggedInUser(authentication);
         return user.isUsingMfa() ? sendVerificationCode(user) : sendResponse(user);
     }
 
@@ -236,10 +238,6 @@ public class UserController {
 
     private UserPrincipal getUserPrincipal(UserDTO user) {
         return new UserPrincipal(toUser(userService.getUserByEmail(user.getEmail())), roleService.getRoleByUserId(user.getId()));
-    }
-
-    private UserDTO getAuthenticatedUser(Authentication authentication) {
-        return ((UserPrincipal) authentication.getPrincipal()).getUser();
     }
 
     private Authentication authenticate (String email, String password) {
