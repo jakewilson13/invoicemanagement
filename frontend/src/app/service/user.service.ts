@@ -27,6 +27,14 @@ export class UserService {
         catchError(this.handleError)
       );
 
+  profile$ = () => <Observable<CustomHttpResponse<Profile>>>
+    this.http.get<CustomHttpResponse<Profile>>
+    (`${this.server}/user/profile`)
+      .pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      );
+
   /*
    *ErrorEvent is an error that occurs on the front-end.
    */
