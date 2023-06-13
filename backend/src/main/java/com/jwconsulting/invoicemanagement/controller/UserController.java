@@ -5,6 +5,7 @@ import com.jwconsulting.invoicemanagement.exception.ApiException;
 import com.jwconsulting.invoicemanagement.form.LoginForm;
 import com.jwconsulting.invoicemanagement.form.ResetPasswordForm;
 import com.jwconsulting.invoicemanagement.form.UpdateForm;
+import com.jwconsulting.invoicemanagement.form.UpdatePasswordForm;
 import com.jwconsulting.invoicemanagement.model.HttpResponse;
 import com.jwconsulting.invoicemanagement.model.User;
 import com.jwconsulting.invoicemanagement.model.UserPrincipal;
@@ -52,7 +53,7 @@ public class UserController {
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
-                        .data(Map.of("user", user))
+                        .data(Map.of("user", user, "roles", roleService.getRoles()))
                         .message("Profile Retrieved")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
@@ -121,6 +122,20 @@ public class UserController {
      * END
      * This is the end of logic to reset a users password when they are not already logged into the application.
      **/
+
+    @PatchMapping("/update/password")
+    public ResponseEntity<HttpResponse> updatePassword(Authentication authentication, @RequestBody @Valid UpdatePasswordForm form) {
+        UserDTO userDTO = getAuthenticatedUser(authentication);
+        userService.updatePassword(userDTO.getId(), form.getCurrentPassword(), form.getNewPassword(), form.getConfirmNewPassword());
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .message("Password updated successfully.")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .path(request.getRequestURI())
+                        .build());
+    }
 
     @GetMapping("/verify/account/{key}")
     public ResponseEntity<HttpResponse> verifyAccount(@PathVariable("key") String key) {

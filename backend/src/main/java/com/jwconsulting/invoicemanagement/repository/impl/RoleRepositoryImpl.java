@@ -85,4 +85,14 @@ public class RoleRepositoryImpl implements RoleRepository<Role> {
     public void updateUserRole(Long userId, String roleName) {
 
     }
+    @Override
+    public Collection<Role> list() {
+        log.info("Fetching all roles for user id");
+        try {
+            return jdbc.query(SELECT_ROLES_QUERY, new RoleRowMapper());  //mapping the roles to an actual java object
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
 }

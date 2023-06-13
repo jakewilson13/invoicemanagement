@@ -32,7 +32,7 @@ public class TokenProvider {
     private static final String JW_CONSULTING_LLC = "JW Consulting LLC";
     private static final String CUSTOMER_MANAGEMENT_SERVICE = "Customer Management Service";
     private static final String AUTHORITIES = "authorities";
-    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 30_000; //30 mins
+    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 1_800_000; //30 mins
     private static final long REFRESH_TOKEN_EXPIRATION_TIME = 432_000_000;  //5 days
     private static final String TOKEN_CANNOT_BE_VERIFIED = "This token cannot be verified.";
 
