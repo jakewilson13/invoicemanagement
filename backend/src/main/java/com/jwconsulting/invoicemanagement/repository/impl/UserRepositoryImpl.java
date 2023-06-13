@@ -3,6 +3,7 @@ package com.jwconsulting.invoicemanagement.repository.impl;
 import com.jwconsulting.invoicemanagement.dto.UserDTO;
 import com.jwconsulting.invoicemanagement.enumeration.VerificationType;
 import com.jwconsulting.invoicemanagement.exception.ApiException;
+import com.jwconsulting.invoicemanagement.form.UpdateForm;
 import com.jwconsulting.invoicemanagement.model.Role;
 import com.jwconsulting.invoicemanagement.model.User;
 import com.jwconsulting.invoicemanagement.model.UserPrincipal;
@@ -42,7 +43,6 @@ import static org.apache.commons.lang3.time.DateUtils.addDays;
 @RequiredArgsConstructor
 @Slf4j
 public class UserRepositoryImpl implements UserRepository<User>, UserDetailsService {
-
     private static final String DATE_FORMAT = "yyyy-MM-dd hh:mm:ss";
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -81,7 +81,14 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
 
     @Override
     public User get(Long id) {
-        return null;
+        try {
+            return jdbc.queryForObject(SELECT_USER_BY_ID_QUERY, Map.of("id", id), new UserRowMapper());
+        } catch (EmptyResultDataAccessException e) {
+            throw new ApiException("No User found by id: " + id);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
     }
 
     @Override
@@ -209,6 +216,20 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         }
     }
 
+    @Override
+    public User updateUserDetails(UpdateForm user) {
+        try {
+            jdbc.update(UPDATE_USER_INFORMATION_QUERY, getUserDetailsSqlParametersSource(user));
+            return get(user.getId());
+        } catch(EmptyResultDataAccessException e) {
+            throw new ApiException("No user found by id: " + user.getId());
+        }
+        catch(Exception e) {
+            log.error(e.getMessage());
+            throw new ApiException("An error occured. Please try again.");
+        }
+    }
+
     private Boolean isLinkExpired(String key, VerificationType password) {
         try {
             return jdbc.queryForObject(SELECT_EXPIRATION_BY_URL, Map.of("url", getVerificationUrl(key, password.getType())), Boolean.class);
@@ -239,6 +260,18 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
                 .addValue("lastName", user.getLastName())
                 .addValue("email", user.getEmail())
                 .addValue("password", encoder.encode(user.getPassword()));
+    }
+
+    private SqlParameterSource getUserDetailsSqlParametersSource(UpdateForm user) {
+        return new MapSqlParameterSource()
+                .addValue("id", user.getId())
+                .addValue("firstName", user.getFirstName())
+                .addValue("lastName", user.getLastName())
+                .addValue("email", user.getEmail())
+                .addValue("phone", user.getPhone())
+                .addValue("address", user.getAddress())
+                .addValue("title", user.getTitle())
+                .addValue("bio", user.getBio());
     }
 
     private String getVerificationUrl(String key, String type) {

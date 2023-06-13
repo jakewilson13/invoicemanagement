@@ -1,6 +1,7 @@
 package com.jwconsulting.invoicemanagement.service;
 
 import com.jwconsulting.invoicemanagement.dto.UserDTO;
+import com.jwconsulting.invoicemanagement.form.UpdateForm;
 import com.jwconsulting.invoicemanagement.model.User;
 
 public interface UserService {
@@ -17,4 +18,7 @@ public interface UserService {
     void renewPassword(String key, String password, String confirmPassword);
 
     UserDTO verifyAccountKey(String key);
+
+    UserDTO updateUserDetails(UpdateForm user);
+    UserDTO getUserById(Long userId);
 }

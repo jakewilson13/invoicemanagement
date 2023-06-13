@@ -1,6 +1,7 @@
 package com.jwconsulting.invoicemanagement.service.impl;
 
 import com.jwconsulting.invoicemanagement.dto.UserDTO;
+import com.jwconsulting.invoicemanagement.form.UpdateForm;
 import com.jwconsulting.invoicemanagement.model.Role;
 import com.jwconsulting.invoicemanagement.model.User;
 import com.jwconsulting.invoicemanagement.repository.RoleRepository;
@@ -56,6 +57,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO verifyAccountKey(String key) {
         return mapToUserDto(userRepo.verifyAccountKey(key));
+    }
+
+    @Override
+    public UserDTO updateUserDetails(UpdateForm user) {
+        return mapToUserDto(userRepo.updateUserDetails(user));
+    }
+
+    @Override
+    public UserDTO getUserById(Long userId) {
+        return mapToUserDto(userRepo.get(userId));
     }
 
     private UserDTO mapToUserDto(User user) {

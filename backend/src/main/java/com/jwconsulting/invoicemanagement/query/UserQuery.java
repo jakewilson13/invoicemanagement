@@ -18,4 +18,6 @@ public class UserQuery {
     public static final String DELETE_VERIFICATION_BY_URL_QUERY = "DELETE FROM resetpasswordverifications WHERE url = :url";
     public static final String SELECT_USER_BY_ACCOUNT_URL_QUERY = "SELECT * FROM users WHERE id = (SELECT user_id FROM accountverifications WHERE url = :url)";
     public static final String UPDATE_USER_ENABLED_QUERY = "UPDATE users SET enabled = :enabled WHERE id = :id";
+    public static final String UPDATE_USER_INFORMATION_QUERY = "UPDATE users SET first_name = :firstName, last_name = :lastName, email = :email, phone = :phone, address = :address, title = :title, bio = :bio WHERE id = :id";
+    public static final String SELECT_USER_BY_ID_QUERY = "SELECT * FROM users WHERE id = :id";
 }

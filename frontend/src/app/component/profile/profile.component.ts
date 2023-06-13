@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import {BehaviorSubject, catchError, map, Observable, of, startWith} from "rxjs";
+import {BehaviorSubject, catchError, map, Observable, of, pipe, startWith} from "rxjs";
 import {UserService} from "../../service/user.service";
 import {State} from "../../interface/state";
 import { DataState } from "../../enum/datastate.enum";
 import {CustomHttpResponse} from "../../interface/customhttpresponse";
 import {Profile} from "../../interface/profile";
+import {NgForm} from "@angular/forms";
 
 @Component({
   selector: 'app-profile',
@@ -24,7 +25,7 @@ export class ProfileComponent implements OnInit {
     this.profileState$ = this.userService.profile$()
       .pipe(
         map(response => {
-          console.log(response);
+          console.log('Response from our API: ', response);
           this.dataSubject.next(response);
           return { dataState: DataState.LOADED, appData: response };
         }),
@@ -34,5 +35,22 @@ export class ProfileComponent implements OnInit {
         })
       )
   }
-}
 
+  updateProfile(profileForm: NgForm): void {
+    this.isLoadingSubject.next(true);
+    this.profileState$ = this.userService.update$(profileForm.value)
+      .pipe(
+        map(response => {
+          console.log('Update profile response from API: ', response);
+          this.dataSubject.next({ ...response, data: response.data });
+          this.isLoadingSubject.next(false);
+          return { dataState: DataState.LOADED, appData: this.dataSubject.value };
+        }),
+        startWith({ dataState: DataState.LOADED, appData: this.dataSubject.value }),
+        catchError((error: string) => {
+          this.isLoadingSubject.next(false);
+          return of({ dataState: DataState.LOADED, appData: this.dataSubject.value, error })
+        })
+      )
+  }
+}

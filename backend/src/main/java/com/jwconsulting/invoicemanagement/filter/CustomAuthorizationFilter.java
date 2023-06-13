@@ -31,7 +31,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 /**
  * Filter that intercepts each request through our security config.
  **/
-    private static final String[] PUBLIC_ROUTES = { "/user/register", "/user/login", "/user/verify/code" };
+    private static final String[] PUBLIC_ROUTES = { "/user/register", "/user/login", "/user/verify/code", "/user/refresh/token" };
     private final TokenProvider tokenProvider;
     private static final String TOKEN_PREFIX = "Bearer ";
     private static final String HTTP_OPTIONS_METHOD = "Options";
@@ -40,11 +40,11 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            Map<String, String> values = getRequestValues(request);
             String token = getToken(request);
-            if(tokenProvider.isTokenValid(values.get("email"), token)) {
-                List<GrantedAuthority> authorities = tokenProvider.getAuthorities(values.get(TOKEN_KEY));
-                Authentication auth = tokenProvider.getAuthentication(values.get(EMAIL_KEY), authorities, request);
+            Long userId = getUserId(request);
+            if(tokenProvider.isTokenValid(userId, token)) {
+                List<GrantedAuthority> authorities = tokenProvider.getAuthorities(token);
+                Authentication auth = tokenProvider.getAuthentication(userId, authorities, request);
                 SecurityContextHolder.getContext().setAuthentication(auth); //set user as authenticated in the application
             } else {
                 SecurityContextHolder.clearContext();   //know the user isn't authenticated
@@ -64,8 +64,8 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 Arrays.asList(PUBLIC_ROUTES).contains(request.getRequestURI());
     }
 
-    private Map<String, String> getRequestValues(HttpServletRequest request) {
-        return Map.of(EMAIL_KEY, tokenProvider.getSubject(getToken(request), request), TOKEN_KEY, getToken(request));
+    private Long getUserId(HttpServletRequest request) {
+        return tokenProvider.getSubject(getToken(request), request);
     }
 
     private String getToken(HttpServletRequest request) {

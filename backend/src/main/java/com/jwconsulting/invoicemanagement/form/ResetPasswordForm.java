@@ -2,8 +2,11 @@ package com.jwconsulting.invoicemanagement.form;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class ResetPasswordForm {
     @NotEmpty(message = "New password field cannot be empty.")
     private String password;

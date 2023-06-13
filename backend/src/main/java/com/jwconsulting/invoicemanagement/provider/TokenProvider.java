@@ -11,7 +11,6 @@ import com.jwconsulting.invoicemanagement.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,10 +19,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
@@ -36,7 +32,7 @@ public class TokenProvider {
     private static final String JW_CONSULTING_LLC = "JW Consulting LLC";
     private static final String CUSTOMER_MANAGEMENT_SERVICE = "Customer Management Service";
     private static final String AUTHORITIES = "authorities";
-    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 1_800_000; //30 mins
+    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 30_000; //30 mins
     private static final long REFRESH_TOKEN_EXPIRATION_TIME = 432_000_000;  //5 days
     private static final String TOKEN_CANNOT_BE_VERIFIED = "This token cannot be verified.";
 
@@ -46,28 +42,27 @@ public class TokenProvider {
     public String createAccessToken(UserPrincipal user) {
         String[] claims = getClaimsFromUser(user);
         return JWT.create().withIssuer(JW_CONSULTING_LLC).withAudience(CUSTOMER_MANAGEMENT_SERVICE)
-                .withIssuedAt(new Date()).withSubject(user.getUsername()).withArrayClaim(AUTHORITIES, claims)
+                .withIssuedAt(new Date()).withSubject(String.valueOf(user.getUser().getId())).withArrayClaim(AUTHORITIES, claims)
                 .withExpiresAt(new Date(currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(secret.getBytes()));
     }
 
     public String createRefreshToken(UserPrincipal user) {
-        String[] claims = getClaimsFromUser(user);
         return JWT.create().withIssuer(JW_CONSULTING_LLC).withAudience(CUSTOMER_MANAGEMENT_SERVICE)
-                .withIssuedAt(new Date()).withSubject(user.getUsername())
+                .withIssuedAt(new Date()).withSubject(String.valueOf(user.getUser().getId()))
                 .withExpiresAt(new Date(currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(secret.getBytes()));
     }
 
-    public String getSubject(String token, HttpServletRequest request) {
+    public Long getSubject(String token, HttpServletRequest request) {
         try {
-            return getJwtVerifier().verify(token).getSubject();
+            return Long.valueOf(getJwtVerifier().verify(token).getSubject());
         } catch (TokenExpiredException e) {
             request.setAttribute("expiredMessage", e.getMessage());
-            return e.getMessage();
+            throw e;
         } catch (InvalidClaimException e) {
             request.setAttribute("invalidClaim", e.getMessage());
-            return e.getMessage();
+            throw e;
         } catch (Exception e) {
             throw e;
         }
@@ -83,15 +78,15 @@ public class TokenProvider {
         }
     }
 
-    public Authentication getAuthentication(String email, List<GrantedAuthority> authorities, HttpServletRequest request) {
-        UsernamePasswordAuthenticationToken usernamePasswordAuthToken = new UsernamePasswordAuthenticationToken(userService.getUserByEmail(email), null, authorities);
+    public Authentication getAuthentication(Long userId, List<GrantedAuthority> authorities, HttpServletRequest request) {
+        UsernamePasswordAuthenticationToken usernamePasswordAuthToken = new UsernamePasswordAuthenticationToken(userService.getUserById(userId), null, authorities);
         usernamePasswordAuthToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         return usernamePasswordAuthToken;
     }
 
-    public boolean isTokenValid(String email, String token) {
+    public boolean isTokenValid(Long userId, String token) {
         JWTVerifier verifier = getJwtVerifier();
-        return StringUtils.isNotEmpty(email) && !isTokenExpired(verifier, token);
+        return !Objects.isNull(userId) && !isTokenExpired(verifier, token);
     }
 
     private boolean isTokenExpired(JWTVerifier verifier, String token) {

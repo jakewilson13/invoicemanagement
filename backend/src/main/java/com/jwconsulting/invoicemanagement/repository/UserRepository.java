@@ -1,6 +1,7 @@
 package com.jwconsulting.invoicemanagement.repository;
 
 import com.jwconsulting.invoicemanagement.dto.UserDTO;
+import com.jwconsulting.invoicemanagement.form.UpdateForm;
 import com.jwconsulting.invoicemanagement.model.User;
 
 import java.util.Collection;
@@ -16,13 +17,10 @@ public interface UserRepository <T extends User> {
     /**More Complex Operations**/
     User getUserByEmail(String email);
     void sendVerificationCode(UserDTO user);
-
     User verifyCode(String email, String code);
-
     void resetPassword(String email);
-
     T verifyPasswordKey(String key);
-
     void renewPassword(String key, String password, String confirmPassword);
     T verifyAccountKey(String key);
+    T updateUserDetails(UpdateForm user);
 }

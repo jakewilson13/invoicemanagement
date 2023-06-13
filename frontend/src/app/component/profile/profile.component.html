@@ -10,6 +10,7 @@
               <a [routerLink]="['/']">Home</a>
             </li>
             <li class="breadcrumb-item active"> Users </li>
+            <!--parsing out the JSON response to grab the user information-->
             <li class="breadcrumb-item active" aria-current="page">{{ state?.appData?.data?.user?.firstName }} {{ state?.appData?.data?.user?.lastName }}</li>
           </ol>
         </nav>
@@ -53,7 +54,7 @@
                   <div class="col-md-6">
                     <div class="form-group">
                       <label>First Name</label>
-                      <input type="text" name="firstName" [ngModel]="state?.appData?.data?.user?.firstName" [disabled]="state?.appData?.data?.user?.roleName === 'ROLE_USER' || (isLoading$ | async) || (isLoading$ | async)" class="form-control">
+                      <input type="text" name="firstName" [ngModel]="state?.appData?.data?.user?.firstName" [disabled]="state?.appData?.data?.user?.roleName === 'ROLE_USER' || (isLoading$ | async)" class="form-control">
                     </div>
                   </div>
                   <div class="col-md-6">

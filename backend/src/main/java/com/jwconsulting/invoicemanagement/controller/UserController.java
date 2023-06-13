@@ -4,6 +4,7 @@ import com.jwconsulting.invoicemanagement.dto.UserDTO;
 import com.jwconsulting.invoicemanagement.exception.ApiException;
 import com.jwconsulting.invoicemanagement.form.LoginForm;
 import com.jwconsulting.invoicemanagement.form.ResetPasswordForm;
+import com.jwconsulting.invoicemanagement.form.UpdateForm;
 import com.jwconsulting.invoicemanagement.model.HttpResponse;
 import com.jwconsulting.invoicemanagement.model.User;
 import com.jwconsulting.invoicemanagement.model.UserPrincipal;
@@ -24,9 +25,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.jwconsulting.invoicemanagement.dto.UserDTOMapper.toUser;
-import static com.jwconsulting.invoicemanagement.utils.ExceptionUtils.processError;
 import static com.jwconsulting.invoicemanagement.utils.UserUtils.getAuthenticatedUser;
 import static com.jwconsulting.invoicemanagement.utils.UserUtils.getLoggedInUser;
 import static java.time.LocalDateTime.now;
@@ -137,7 +138,7 @@ public class UserController {
     public ResponseEntity<HttpResponse> refreshToken(HttpServletRequest request) {
         if(isHeaderTokenValid(request)) {
             String token = request.getHeader(HttpHeaders.AUTHORIZATION).substring(TOKEN_PREFIX.length());   //removing bearer  to get just the token
-            UserDTO user = userService.getUserByEmail(provider.getSubject(token, request));
+            UserDTO user = userService.getUserById(provider.getSubject(token, request));
             return ResponseEntity.ok().body(
                     HttpResponse.builder()
                             .timeStamp(now().toString())
@@ -159,6 +160,21 @@ public class UserController {
                             .path(request.getRequestURI())
                             .build());
         }
+    }
+
+    @PatchMapping ("/update")
+    public ResponseEntity<HttpResponse> updateUser(@RequestBody @Valid UpdateForm user) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(2);
+        UserDTO updatedUser = userService.updateUserDetails(user);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .data(Map.of("user", updatedUser))
+                        .message("User Updated Successfully.")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .path(request.getRequestURI())
+                        .build());
     }
 
     @PostMapping(value = "/login")

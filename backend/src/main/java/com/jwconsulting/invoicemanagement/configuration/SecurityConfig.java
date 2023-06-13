@@ -33,7 +33,7 @@ public class SecurityConfig {
     private static final String[] PUBLIC_URLS = { "/user/register/**", "/user/login/**", "/user/verify/code/**", "/user/reset/password/**", "/user/verify/password/**", "/user/verify/account/**", "/user/refresh/token/**" };
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable().cors().disable(); //disable cors so we can put in our own cors config
+        http.csrf().disable().cors();
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.authorizeHttpRequests().requestMatchers(PUBLIC_URLS).permitAll();
         http.authorizeHttpRequests().requestMatchers(HttpMethod.DELETE, "/user/delete/**").hasAnyAuthority("DELETE:USER");    //if they have our specified authority of deletion users then they have permissions
