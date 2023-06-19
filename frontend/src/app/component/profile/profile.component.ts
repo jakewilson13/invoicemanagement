@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import {BehaviorSubject, catchError, map, Observable, of, pipe, startWith} from "rxjs";
-import {UserService} from "../../service/user.service";
-import {State} from "../../interface/state";
+import { BehaviorSubject, catchError, map, Observable, of, pipe, startWith } from "rxjs";
+import { UserService } from "../../service/user.service";
+import { State } from "../../interface/state";
 import { DataState } from "../../enum/datastate.enum";
-import {CustomHttpResponse} from "../../interface/customhttpresponse";
-import {Profile} from "../../interface/profile";
-import {NgForm} from "@angular/forms";
+import { CustomHttpResponse } from "../../interface/customhttpresponse";
+import { Profile } from "../../interface/profile";
+import { NgForm } from "@angular/forms";
 
 @Component({
   selector: 'app-profile',
@@ -76,5 +76,39 @@ export class ProfileComponent implements OnInit {
       console.log('passwords dont match');
       this.isLoadingSubject.next(false);
     }
+  }
+
+  updateRole(roleForm: NgForm): void {
+    this.isLoadingSubject.next(true);
+    this.profileState$ = this.userService.updateRoles$(roleForm.value.roleName)
+      .pipe(
+        map(response => {
+          console.log(response);
+          this.dataSubject.next({ ...response, data: response.data });
+          this.isLoadingSubject.next(false);
+          return { dataState: DataState.LOADED, appData: this.dataSubject.value };
+        }),
+        startWith({ dataState: DataState.LOADED, appData: this.dataSubject.value }),
+        catchError((error: string) => {
+          this.isLoadingSubject.next(false);
+          return of({ dataState: DataState.LOADED, appData: this.dataSubject.value, error })
+        }))
+  }
+
+  updateAccountSettings(settingsForm: NgForm): void {
+    this.isLoadingSubject.next(true);
+    this.profileState$ = this.userService.updateAccountSettings$(settingsForm.value)
+      .pipe(
+        map(response => {
+          console.log(response);
+          this.dataSubject.next({ ...response, data: response.data });
+          this.isLoadingSubject.next(false);
+          return { dataState: DataState.LOADED, appData: this.dataSubject.value };
+        }),
+        startWith({ dataState: DataState.LOADED, appData: this.dataSubject.value }),
+        catchError((error: string) => {
+          this.isLoadingSubject.next(false);
+          return of({ dataState: DataState.LOADED, appData: this.dataSubject.value, error })
+        }))
   }
 }

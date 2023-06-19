@@ -3,8 +3,8 @@ import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { catchError, Observable, tap, throwError } from "rxjs";
 import { CustomHttpResponse } from "../interface/customhttpresponse";
 import { Profile } from "../interface/profile";
-import {User} from "../interface/user";
-import {Key} from "../enum/key.enum";
+import { User } from "../interface/user";
+import { Key } from "../enum/key.enum";
 
 @Injectable({
   providedIn: 'root'
@@ -62,6 +62,22 @@ export class UserService {
   updatePassword$ = (form: { currentPassword: string, newPassword: string, confirmNewPassword: string }) => <Observable<CustomHttpResponse<Profile>>>
     this.http.patch<CustomHttpResponse<Profile>>
     (`${this.server}/user/update/password`, form)
+      .pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      );
+
+  updateRoles$ = (roleName: string) => <Observable<CustomHttpResponse<Profile>>>
+    this.http.patch<CustomHttpResponse<Profile>>
+    (`${this.server}/user/update/role/${roleName}`, {})
+      .pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      );
+
+  updateAccountSettings$ = (settings: { enabled: boolean, notLocked: boolean }) => <Observable<CustomHttpResponse<Profile>>>
+    this.http.patch<CustomHttpResponse<Profile>>
+    (`${this.server}/user/update/account/settings`, settings)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
