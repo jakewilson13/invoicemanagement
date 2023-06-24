@@ -5,7 +5,7 @@ import {
   HttpEvent,
   HttpInterceptor, HttpResponse, HttpErrorResponse
 } from '@angular/common/http';
-import {BehaviorSubject, catchError, Observable, switchMap, throwError} from 'rxjs';
+import { BehaviorSubject, catchError, Observable, switchMap, throwError } from 'rxjs';
 import { Key } from '../enum/key.enum';
 import { UserService } from "../service/user.service";
 import { Profile } from "../interface/profile";

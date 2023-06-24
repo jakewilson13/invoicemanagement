@@ -1,4 +1,4 @@
-export interface CustomHttpResponse<T>{
+export interface CustomHttpResponse<T> {
   timeStamp: Date;
   statusCode: number;
   status: string;

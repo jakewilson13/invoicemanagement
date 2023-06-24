@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import {Router} from "@angular/router";
-import {UserService} from "../../service/user.service";
-import {NgForm} from "@angular/forms";
-import {BehaviorSubject, catchError, map, Observable, of, startWith} from "rxjs";
-import {LoginState} from "../../interface/loginstate";
-import {DataState} from "../../enum/datastate.enum";
-import {Key} from "../../enum/key.enum";
+import { Router } from "@angular/router";
+import { UserService } from "../../service/user.service";
+import { NgForm } from "@angular/forms";
+import { BehaviorSubject, catchError, map, Observable, of, startWith } from "rxjs";
+import { LoginState } from "../../interface/loginstate";
+import { DataState } from "../../enum/datastate.enum";
+import { Key } from "../../enum/key.enum";
 
 @Component({
   selector: 'app-login',

@@ -39,7 +39,7 @@ export class UserService {
 
   update$ = (user: User) => <Observable<CustomHttpResponse<Profile>>>
     this.http.patch<CustomHttpResponse<Profile>>
-    (`${this.server}/user/update`, user)
+    (`${this.server}/user/update/account`, user)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -61,7 +61,7 @@ export class UserService {
 
   updatePassword$ = (form: { currentPassword: string, newPassword: string, confirmNewPassword: string }) => <Observable<CustomHttpResponse<Profile>>>
     this.http.patch<CustomHttpResponse<Profile>>
-    (`${this.server}/user/update/password`, form)
+    (`${this.server}/user/update/account/password`, form)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -69,7 +69,7 @@ export class UserService {
 
   updateRoles$ = (roleName: string) => <Observable<CustomHttpResponse<Profile>>>
     this.http.patch<CustomHttpResponse<Profile>>
-    (`${this.server}/user/update/role/${roleName}`, {})
+    (`${this.server}/user/update/account/role/${roleName}`, {})
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -78,6 +78,13 @@ export class UserService {
   updateAccountSettings$ = (settings: { enabled: boolean, notLocked: boolean }) => <Observable<CustomHttpResponse<Profile>>>
     this.http.patch<CustomHttpResponse<Profile>>
     (`${this.server}/user/update/account/settings`, settings)
+      .pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      )
+  toggleMfa$ = () => <Observable<CustomHttpResponse<Profile>>>
+    this.http.patch<CustomHttpResponse<Profile>>
+    (`${this.server}/user/update/account/mfa`, {})
       .pipe(
         tap(console.log),
         catchError(this.handleError)
