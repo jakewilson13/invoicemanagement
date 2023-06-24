@@ -25,4 +25,5 @@ public interface UserRepository <T extends User> {
     T updateUserDetails(UpdateForm user);
     void updatePassword(Long id, String currentPassword, String newPassword, String confirmNewPassword);
     void updateUserAccountSettings(Long userId, Boolean enabled, Boolean notLocked);
+    T toggleMfa(String email);
 }

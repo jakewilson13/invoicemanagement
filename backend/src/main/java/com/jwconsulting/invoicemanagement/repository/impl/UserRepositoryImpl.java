@@ -35,7 +35,9 @@ import static com.jwconsulting.invoicemanagement.enumeration.RoleType.ROLE_USER;
 import static com.jwconsulting.invoicemanagement.enumeration.VerificationType.ACCOUNT;
 import static com.jwconsulting.invoicemanagement.enumeration.VerificationType.PASSWORD;
 import static com.jwconsulting.invoicemanagement.query.UserQuery.*;
+
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.time.DateFormatUtils.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
@@ -212,7 +214,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         } catch (EmptyResultDataAccessException e) {
             throw new ApiException("This link is not valid.");
         } catch(Exception e) {
-            throw new ApiException("An error occured. Please try again.");
+            throw new ApiException("An error occurred. Please try again.");
         }
     }
 
@@ -226,7 +228,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         }
         catch(Exception e) {
             log.error(e.getMessage());
-            throw new ApiException("An error occured. Please try again.");
+            throw new ApiException("An error occurred. Please try again.");
         }
     }
 
@@ -255,6 +257,19 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         }
     }
 
+    @Override
+    public User toggleMfa(String email) {
+        User user = getUserByEmail(email);
+        if(isBlank(user.getPhone())) { throw new ApiException("You need a phone number to change Multi-Factor Authentication."); }
+        user.setUsingMfa(!user.isUsingMfa());
+        try {
+            jdbc.update(TOGGLE_USER_MFA_QUERY, Map.of("email", email, "isUsingMfa", user.isUsingMfa()));
+            return user;
+        } catch (Exception e) {
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
     private Boolean isLinkExpired(String key, VerificationType password) {
         try {
             return jdbc.queryForObject(SELECT_EXPIRATION_BY_URL, Map.of("url", getVerificationUrl(key, password.getType())), Boolean.class);
@@ -272,7 +287,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         } catch (EmptyResultDataAccessException e) {
             throw new ApiException("This code is not valid. Please enter the correct verification code.");
         } catch(Exception e) {
-            throw new ApiException("An error occured. Please try again.");
+            throw new ApiException("An error occurred. Please try again.");
         }
     }
 

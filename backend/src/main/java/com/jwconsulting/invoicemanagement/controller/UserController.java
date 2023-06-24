@@ -41,7 +41,6 @@ public class UserController {
     private final AuthenticationManager authManager;
     private final TokenProvider provider;
     private final HttpServletRequest request;
-    private final HttpServletResponse response;
 
     @GetMapping("/profile")
     public ResponseEntity<HttpResponse> profile(Authentication authentication) {
@@ -161,7 +160,22 @@ public class UserController {
         }
     }
 
-    @PatchMapping("/update/password")
+    @PatchMapping ("/update/account")
+    public ResponseEntity<HttpResponse> updateUser(@RequestBody @Valid UpdateForm user) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(2);
+        UserDTO updatedUser = userService.updateUserDetails(user);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .data(Map.of("user", updatedUser))
+                        .message("User Updated Successfully.")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .path(request.getRequestURI())
+                        .build());
+    }
+
+    @PatchMapping("/update/account/password")
     public ResponseEntity<HttpResponse> updatePassword(Authentication authentication, @RequestBody @Valid UpdatePasswordForm form) {
         UserDTO userDTO = getAuthenticatedUser(authentication);
         userService.updatePassword(userDTO.getId(), form.getCurrentPassword(), form.getNewPassword(), form.getConfirmNewPassword());
@@ -175,7 +189,7 @@ public class UserController {
                         .build());
     }
 
-    @PatchMapping("/update/role/{roleName}")
+    @PatchMapping("/update/account/role/{roleName}")
     public ResponseEntity<HttpResponse> updateUserRole(Authentication authentication, @PathVariable("roleName") String roleName) {
         UserDTO userDTO = getAuthenticatedUser(authentication);
         userService.updateUserRole(userDTO.getId(), roleName);
@@ -205,15 +219,15 @@ public class UserController {
                         .build());
     }
 
-    @PatchMapping ("/update")
-    public ResponseEntity<HttpResponse> updateUser(@RequestBody @Valid UpdateForm user) throws InterruptedException {
-        TimeUnit.SECONDS.sleep(2);
-        UserDTO updatedUser = userService.updateUserDetails(user);
+    @PatchMapping("/update/account/mfa")
+    public ResponseEntity<HttpResponse> toggleMultiFactorAuthentication(Authentication authentication) throws InterruptedException {
+       TimeUnit.SECONDS.sleep(2);
+       UserDTO user = userService.toggleMfa(getAuthenticatedUser(authentication).getEmail());
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
+                        .data(Map.of("user", user, "roles", roleService.getRoles()))
                         .timeStamp(now().toString())
-                        .data(Map.of("user", updatedUser))
-                        .message("User Updated Successfully.")
+                        .message("Multi-Factor Authentication updated.")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
                         .path(request.getRequestURI())

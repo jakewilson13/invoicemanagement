@@ -83,6 +83,11 @@ public class UserServiceImpl implements UserService {
         userRepo.updateUserAccountSettings(userId, enabled, notLocked);
     }
 
+    @Override
+    public UserDTO toggleMfa(String email) {
+        return mapToUserDto(userRepo.toggleMfa(email));
+    }
+
     private UserDTO mapToUserDto(User user) {
         return fromUser(user, roleRepo.getRoleByUserId(user.getId()));
     }
